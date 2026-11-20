@@ -1,10 +1,10 @@
 # Brownfield context for Kiro
 
-Make a legacy brownfield codebase **AI-ready** for [Kiro](https://kiro.dev/): build a reviewed, cited
+Make a large brownfield application **AI-ready** for [Kiro](https://kiro.dev/): build a reviewed, cited
 context of the system once, keep it current as the code changes, and give Kiro the most relevant verified
 facts with every prompt.
 
-In a large legacy application, Kiro sees the files in the current session, not the whole system. Questions
+In a large brownfield application, Kiro sees the files in the current session, not the whole system. Questions
 that span the application, such as how a business flow works end to end, which components and
 configuration a change affects, where a defect most likely starts, or whether a requirement already exists,
 depend on rules and dependencies in files Kiro has not opened. Those answers can be incomplete or wrong.
@@ -12,9 +12,10 @@ This sample gives Kiro reviewed context for the entire application, so its answe
 verified: each one cites the rule ID, its review status and the source file and line, and the team can check
 it before acting on it.
 
-Think of a senior engineer. Steering is how they work: the standards and habits they bring to every task.
-The knowledge base is the ten years of system knowledge in their head. Today Kiro has the habits but not
-the memory. This sample gives it the memory.
+This context adds to Kiro steering rather than replacing it. Compare Kiro with a senior engineer who has
+worked on the application for years. Steering is how that engineer works: the standards and habits they
+bring to every task. The knowledge base is the ten years of system knowledge in their head. Today Kiro has
+the habits but not the memory. This sample gives it the memory.
 
 The approach is also frugal. The expensive work, reading the code and extracting the rules, runs once per
 module and is reviewed once. After that, developers and Kiro agents read the same summarized, vectorized
@@ -30,14 +31,14 @@ a review status and a source file and line, so every answer Kiro gives can be tr
 
 The approach puts into practice the Kiro frontier engineering practice
 [Build your codebase for agents](https://kiro.dev/topics/frontier-engineering/build-for-agents/): an agent
-onboards every session, so give it explicit context, and prepare a large legacy codebase one module at a
+onboards every session, so give it explicit context, and prepare a large brownfield application one module at a
 time.
 
 ---
 
 ## Architecture
 
-![Flow from a legacy Java codebase through AWS Transform custom extraction, mechanical checks, a Kiro review and an SME sign-off gate, into an Amazon Bedrock knowledge base and a code graph, then retrieved by a Kiro hook before each prompt, with a dashed keep-current loop back to the review gate.](docs/images/architecture.png)
+![Flow from a brownfield Java application through AWS Transform custom extraction, mechanical checks, a Kiro review and an SME sign-off gate, into an Amazon Bedrock knowledge base and a code graph, then retrieved by a Kiro hook before each prompt, with a dashed keep-current loop back to the review gate.](docs/images/architecture.png)
 
 AWS Transform custom extracts draft business rules from the Java code. `bcp` resolves each rule's
 citations on disk, Kiro reviews the rules against the cited code, and an SME signs them off. Reviewed rules
