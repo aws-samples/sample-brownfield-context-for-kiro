@@ -1,8 +1,9 @@
 # Brownfield context for Kiro
 
-Make a large brownfield application **AI-ready** for [Kiro](https://kiro.dev/): build a reviewed, cited
-context of the system once, keep it current as the code changes, and give Kiro the most relevant verified
-facts with every prompt.
+Enable faster AI-native product delivery on a large brownfield application, the software that runs the
+business and brings in the revenue, by making it **AI-ready** for [Kiro](https://kiro.dev/): build a
+reviewed, cited context of the system once, keep it current as the code changes, and give Kiro the most
+relevant verified facts with every prompt.
 
 In a large brownfield application, Kiro sees the files in the current session, not the whole system. Questions
 that span the application, such as how a business flow works end to end, which components and
@@ -21,7 +22,9 @@ engineer works: the standards and habits they bring to every task. The knowledge
 system knowledge in their head. Today Kiro has, at most, the habits from steering files a team writes by
 hand, and none of the memory. This sample gives it both. `bcp generate` writes the Kiro steering, agents
 and skills from the reviewed rules, so the team does not have to write them manually, and `bcp kb sync`
-loads the verified facts into the knowledge base that holds the memory. `bcp graph build` adds a class-level
+loads the verified facts into the knowledge base that holds the memory. Before each prompt, a semantic search
+of that knowledge base finds the facts that match the question by meaning, whichever file they come from.
+`bcp graph build` adds a class-level
 code graph of the dependencies, so an impact question is answered from the graph, not guessed from the files
 open in the session.
 
