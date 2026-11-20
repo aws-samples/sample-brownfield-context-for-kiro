@@ -4,12 +4,22 @@ Make a legacy brownfield codebase **AI-ready** for [Kiro](https://kiro.dev/): bu
 context of the system once, keep it current as the code changes, and give Kiro the most relevant verified
 facts with every prompt.
 
-With that context, Kiro works from your application's reviewed business rules, components and dependencies,
-so it does not have to infer them from the files open in the session. Developers and new team members can
-ask how a business flow works end to end, which components and configuration a change affects, where a
-defect most likely starts, or whether a requirement already exists. Each answer cites the rule ID and the
-source file and line, so the team can check it before acting on it. The same context guides Kiro when it
-writes code or tests, and it stays current as the legacy code changes.
+In a large legacy application, Kiro sees the files in the current session, not the whole system. Questions
+that span the application, such as how a business flow works end to end, which components and
+configuration a change affects, where a defect most likely starts, or whether a requirement already exists,
+depend on rules and dependencies in files Kiro has not opened. Those answers can be incomplete or wrong.
+This sample gives Kiro reviewed context for the entire application, so its answers are traceable and
+verified: each one cites the rule ID, its review status and the source file and line, and the team can check
+it before acting on it.
+
+Think of a senior engineer. Steering is how they work: the standards and habits they bring to every task.
+The knowledge base is the ten years of system knowledge in their head. Today Kiro has the habits but not
+the memory. This sample gives it the memory.
+
+The approach is also frugal. The expensive work, reading the code and extracting the rules, runs once per
+module and is reviewed once. After that, developers and Kiro agents read the same summarized, vectorized
+facts, so neither has to go through the whole codebase for every question. When the code changes,
+`bcp kb refresh` re-anchors or quarantines only the facts whose cited code changed.
 
 This sample provides the `bcp` command-line tool, a Kiro Power with three skills, AWS CloudFormation and
 AWS Identity and Access Management (IAM) templates for an Amazon Bedrock knowledge base, and the scripts and
