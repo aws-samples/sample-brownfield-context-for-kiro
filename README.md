@@ -12,10 +12,12 @@ This sample gives Kiro reviewed context for the entire application, so its answe
 verified: each one cites the rule ID, its review status and the source file and line, and the team can check
 it before acting on it.
 
-This context adds to Kiro steering rather than replacing it. Compare Kiro with a senior engineer who has
-worked on the application for years. Steering is how that engineer works: the standards and habits they
-bring to every task. The knowledge base is the ten years of system knowledge in their head. Today Kiro has
-the habits but not the memory. This sample gives it the memory.
+Compare Kiro with a senior engineer who has worked on the application for years. Steering is how that
+engineer works: the standards and habits they bring to every task. The knowledge base is the ten years of
+system knowledge in their head. Today Kiro has, at most, the habits from steering files a team writes by
+hand, and none of the memory. This sample gives it both. `bcp generate` writes the Kiro steering, agents
+and skills from the reviewed rules, so the team does not have to write them manually, and `bcp kb sync`
+loads the verified facts into the knowledge base that holds the memory.
 
 The approach is also frugal. The expensive work, reading the code and extracting the rules, runs once per
 module and is reviewed once. After that, developers and Kiro agents read the same summarized, vectorized
