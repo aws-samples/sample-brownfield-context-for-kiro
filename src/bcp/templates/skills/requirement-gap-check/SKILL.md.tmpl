@@ -1,0 +1,27 @@
+# Requirement gap check: $project_name
+
+Use this skill when asked whether a requirement, user story or feature already exists, partly exists, or is new in $project_name.
+
+## Procedure
+
+1. Decompose the requirement into capabilities: one line each, each testable on its own.
+2. For each capability, search in this order and keep the evidence:
+   - features: `$bre_dir/detailed-domain-bre/domain-<slug>/features.md` (F-n ids);
+   - rules: `$context_dir/domains/<slug>/reviewed-rules.md` (BR-n ids);
+   - configuration: `$context_dir/variant-map.md` (the behaviour may exist behind a key);
+   - code: search the source for the entities, operations and message codes involved and open the hits.
+3. Classify each capability:
+   - `exists`: a feature or rule and the code implement it as stated;
+   - `partial`: something close exists; name exactly what is missing;
+   - `new`: nothing in the features, rules, variants or code implements it.
+4. For each `partial` or `new` capability, name the domain where the new logic should live. Use the domain's responsibility in `summary.md` and the bounded-context document under `$bre_dir/domain-decomposition-overview/` when present.
+
+## Output
+
+A table with columns: capability, classification, evidence (F-n / BR-n / key / file:line), missing piece, owning domain. End with an overall verdict: exists, partly exists, or new.
+
+## Rules
+
+- `exists` needs code evidence, not only extraction text.
+- Say when the evidence is an unreviewed or needs-SME rule.
+$verification_rules

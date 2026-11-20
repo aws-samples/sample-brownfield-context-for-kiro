@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "brownfield-context",
+  "version": "1.4.3",
+  "description": "Make a brownfield codebase AI-ready for Kiro: review an AWS Transform business-rules extraction against the code, then generate Kiro steering, context maps and skills from the reviewed rules.",
+  "author": { "name": "AWS Solutions Architecture" },
+  "keywords": ["brownfield", "business rules", "business-rules-extraction", "BRE", "system context", "steering", "impact analysis", "legacy codebase", "doc drift", "SME review"],
+  "license": "MIT-0"
+}

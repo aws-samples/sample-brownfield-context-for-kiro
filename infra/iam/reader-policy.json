@@ -1,0 +1,21 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RetrieveVerifiedFacts",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:Retrieve"
+      ],
+      "Resource": "arn:aws:bedrock:<REGION>:<ACCOUNT_ID>:knowledge-base/<KB_ID>"
+    },
+    {
+      "Sid": "ReadDependencyGraphSnapshot",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": "arn:aws:s3:::<NAME_PREFIX>-kb-<ACCOUNT_ID>-<REGION>/graph/latest.json"
+    }
+  ]
+}

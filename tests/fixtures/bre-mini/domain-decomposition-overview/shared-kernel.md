@@ -1,0 +1,3 @@
+# Shared kernel
+
+- Constants

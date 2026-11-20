@@ -1,0 +1,26 @@
+# Cross-component dependencies: $project_name
+
+Use this skill when asked what depends on a component, which interfaces or integration points a domain exposes, how data flows between domains, or where hidden coupling sits.
+
+## Procedure
+
+1. Name the component, class, table or domain the question is about. Map files to domains with `$context_dir/file-index.json`.
+2. Open `$context_dir/dependency-map.md` (and `dependency-map.json` for the full sample lists). If it is missing, fall back to steps 2a and 2b:
+   - 2a. read `$context_dir/impact-map.json` for the extraction-claimed edges (treat every edge as unverified);
+   - 2b. search the code for imports of, and calls to, the component's public types.
+3. Separate the edges:
+   - `confirmed-by-code`: the extraction claims it and the code has references. State it with the sample file pair.
+   - `code-only (missing from BRE)`: the code has references the extraction does not mention. State it from the code; say the extraction misses it.
+   - `bre-only (verify)`: the extraction claims it, the code scan found no reference. Never state it as fact. Search the code (configuration, reflection, events, scheduled jobs, string bean names) and report what you found, or say it is unverified.
+4. List the contracts: interfaces per domain from the map, and for each one the methods the question touches (open the interface file).
+5. List integration points (HTTP, messaging, scheduling, events, files) for the domains in scope. The map gives locations only; open each location before you say what it does.
+6. List data flows through shared tables from the map's "Data flows" section and `$context_dir/impact-map.json` `shared_tables`.
+7. When the question is about a change, hand the confirmed and code-only edges to the impact analysis (see the `change-impact-analysis` skill).
+
+## Output
+
+A table with columns: from, to, kind (code reference, interface, integration point, shared table), status (confirmed-by-code, code-only, bre-only verified now, bre-only unverified), evidence (`[code: path#Lx-Ly]` or the map row).
+
+Then a section "Not visible to a static scan": runtime wiring, configuration-driven beans, other repositories and services, message brokers and schedulers configured outside the code.
+
+$verification_rules

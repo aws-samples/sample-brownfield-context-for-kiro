@@ -1,0 +1,5 @@
+program_id,property,property_value
+a,alpha.mode,strict
+a,beta.limit,5
+a,alpha.mapping,"1:1, 2:2"
+a,alpha.api_token,s3cr3t

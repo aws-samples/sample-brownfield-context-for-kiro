@@ -1,0 +1,65 @@
+# Framework rules: $project_name (Java / Spring example)
+
+Static reading of the code misses these framework semantics. The business-rules extraction was written from static reading, so its claims about end states, rollback and authorization are often wrong in exactly these places. Apply these rules before you state an end state, a rollback, a commit or an authorization fact.
+
+This is a starting example for Java and Spring. Ask the team to confirm each rule for their versions and configuration, add their own, and delete what does not apply. Keep each rule short and say how to check it in code.
+
+## 1. Proxy-based @Transactional: self-invocation bypasses the advice
+
+Spring applies `@Transactional` (and method-security annotations) through a proxy. A call from one method to another method of the same object (`this.other()`, or a plain `other()`) does not go through the proxy. The callee's transaction settings and security annotations do not apply to that call.
+
+How to check in code:
+- Find the caller. If it calls the method on `this` or without a qualifier, the callee's annotations are bypassed.
+- If it calls through an injected bean or a service lookup (for example a static context accessor), the proxy applies.
+- Check whether the project uses AspectJ weaving instead of proxies (`mode = ASPECTJ`); then self-invocation is advised.
+
+## 2. Rollback-only marking by a nested REQUIRED call
+
+With the default propagation (REQUIRED), a nested transactional call joins the caller's transaction. When a RuntimeException leaves the nested transactional method, Spring marks the shared transaction rollback-only, even if the caller catches the exception. At the outer commit Spring throws `UnexpectedRollbackException`, and every write in that transaction rolls back, including error-logging or audit rows written after the catch. REQUIRES_NEW is the exception: it runs in its own transaction and commits or rolls back on its own.
+
+How to check in code:
+- Trace the exception type from the throw site to every catch site.
+- For each transactional method the exception passes through, read its propagation and its `rollbackFor` / `noRollbackFor` settings, on the method and on the class.
+- If the exception crosses a transactional proxy boundary before it is caught, the outer transaction is rollback-only. Writes made after the catch do not survive unless they run in REQUIRES_NEW.
+- State the end state only after this trace: what is committed, what is rolled back, what the caller sees.
+
+## 3. Checked exceptions do not roll back by default
+
+By default Spring rolls back on RuntimeException and Error only. A checked exception leaves the transaction committable, so writes made before the throw are committed unless `rollbackFor` includes that exception type.
+
+How to check in code:
+- Find the exception's class hierarchy: does it extend RuntimeException or Exception?
+- Read `rollbackFor` on the method and on the class.
+- Writes made before a checked exception are committed when the transaction ends normally.
+
+## 4. Method-security annotations: interfaces, proxies and multi-line annotations
+
+Method-security annotations such as `@PreAuthorize`, `@Secured`, `@RolesAllowed` or a project-specific `@Authorized` are often placed on the service interface, not on the implementation. They apply to calls through the proxy. A static reading of the implementation alone misses them. Annotations can span several lines, so a single-line search for "@PreAuthorize(...)" misses some of them.
+
+How to check in code:
+- Read the annotations on the interface method and on the implementation method, and the class-level annotations of both.
+- Read across line breaks: an annotation ends at its closing parenthesis, not at the end of the line.
+- A call from inside the same object (rule 1) skips these checks. A privilege check in the method body (a guard call) is a separate mechanism; look for both.
+- Never state that a method is unguarded until you have read both the interface and the implementation.
+
+## 5. Scheduled, async and timer work runs without the caller's context
+
+`@Scheduled`, `@Async`, executor tasks and timer threads run on other threads. They do not inherit the caller's transaction or the caller's security context. Work there runs with whatever user or session the task sets up, often a system or daemon user, and in a new transaction per call.
+
+How to check in code:
+- Find how the task is started (scheduler configuration, a task table, an executor) and which user or session it runs as.
+- Treat each scheduled run as its own transaction unless the code shows otherwise.
+- Check whether the task is enabled in the deployment; a task defined in code may never run.
+
+## 6. Managed entities are saved at flush or commit
+
+A loaded, managed entity (JPA or Hibernate) is dirty-checked. Changing one of its fields persists the change at the next flush or at commit, without an explicit save call. A "read" method that changes a managed entity can therefore write.
+
+How to check in code:
+- Check whether the entity was loaded in the current transaction or session (managed) or created or detached (not managed).
+- Look for flush mode settings and explicit `flush()` or `clear()` calls.
+- A rollback (rules 2 and 3) discards these pending changes as well.
+
+## Team additions
+
+Add rules for the frameworks this team uses (messaging, caching, batch jobs, persistence settings). Use the same shape: the rule, then "How to check in code".

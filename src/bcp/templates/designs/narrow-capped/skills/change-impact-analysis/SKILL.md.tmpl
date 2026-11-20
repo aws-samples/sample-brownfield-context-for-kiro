@@ -1,0 +1,27 @@
+# Change impact analysis: $project_name
+
+Use this skill when asked which domains, components, tables or configuration variants a change, requirement or fix affects, or what could regress elsewhere.
+
+## Procedure
+
+1. Restate the change in one sentence. List any files, classes, tables, message codes or configuration keys it names.
+2. Find the seed domains:
+   - files or classes named → look them up in `$context_dir/file-index.json` (file → domains);
+   - otherwise match the change text to domain summaries in `.kiro/steering/bre-context-index.md` and open `$context_dir/domains/<slug>/summary.md`.
+3. Expand one hop in `$context_dir/impact-map.json`: every domain in `depends_on` and `depended_on_by` of each seed domain is a candidate. Keep a candidate only when you can name why it is affected (a shared table, a shared entity, a cross-domain feature, a call in the code).
+4. List shared tables (`shared_tables`) and shared entities the change touches, with every domain that uses them.
+5. Open `$context_dir/variant-map.json`. List every configuration key whose `read_by` domains or `hits` files overlap the affected files or domains. These are the variants to retest.
+6. For each affected domain, open `$context_dir/domains/<slug>/reviewed-rules.md` and list the rules at risk by BR id.
+7. Confirm each "why affected" line from the context: a VERIFIED rule's `> Review:` evidence and `> Anchors` line are the code citation, so do not reopen that code. Open code only for a row the context does not support (a rule that is not VERIFIED, or a call or line the context does not give), at most $max_code_reads code reads (file reads or code searches) in total. Mark rows you still cannot confirm as low confidence.
+
+## Output
+
+A table with columns: domain, why affected (evidence: file path or BR id), rules at risk (BR ids), variants to retest (keys), confidence (high / medium / low).
+
+Then a section "What this analysis could not see", always present. Include at least: runtime configuration values in each deployment, other repositories and services outside this extraction, data-dependent behaviour, and any rule marked unreviewed or needs SME that the answer depends on.
+
+## Rules
+
+- Do not list a domain without a reason you can point to.
+- Prefer VERIFIED rules; flag SUSPECTED DEFECT rules explicitly.
+$verification_rules

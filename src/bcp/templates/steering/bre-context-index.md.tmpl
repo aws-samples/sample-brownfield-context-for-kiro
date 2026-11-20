@@ -1,0 +1,14 @@
+# Business-rules context index: $project_name
+
+The business-rules extraction (BRE) is evidence extracted from today's code, including today's defects. Prefer VERIFIED claims, cite BR ids and file paths, and say when a claim is unreviewed, needs SME, or a suspected defect.
+
+## Domains (slug — name — summary)
+
+$domain_lines
+
+## Where the context lives
+
+- Domain context loads automatically: `bre-domain-<slug>.md` when a request matches the domain, `bre-domain-<slug>-code.md` when a domain file is open.
+- Read on demand: `$context_dir/domains/<slug>/summary.md`, `$context_dir/domains/<slug>/reviewed-rules.md`, `$context_dir/impact-map.md` (+ `impact-map.json`, `file-index.json`), `$context_dir/variant-map.md`, `$context_dir/glossary.md` (`#bre-glossary`), `$context_dir/review-status.md`.
+- Raw extraction: `$bre_dir/` (domain folders under `detailed-domain-bre/`).
+- Skills: $skills.

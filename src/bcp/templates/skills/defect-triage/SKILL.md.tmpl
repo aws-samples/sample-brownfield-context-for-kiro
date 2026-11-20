@@ -1,0 +1,25 @@
+# Defect triage: $project_name
+
+Use this skill when a defect, error message, exception or wrong behaviour in $project_name needs to be traced to its domain, rule and code, or when a proposed fix needs an architectural check.
+
+## Procedure
+
+1. Read `$context_dir/errata.md` first. A claim it lists as corrected must not be used in its original form.
+2. Extract the symptoms: message codes, exception types, entity, operation, configuration in use, the affected program or deployment, and the steps to reproduce.
+3. Search for message codes and exception types in `$bre_dir/detailed-domain-bre/domain-*/validations.md` and in `$context_dir/domains/*/reviewed-rules.md`.
+4. Map the symptom to a domain, a BR id and a class.method. Use `$context_dir/file-index.json` when you start from a file.
+5. Open the code at the rule's evidence lines and read the method. Confirm or reject the mapping.
+6. Error end states. When the symptom is a lost write, a missing error record, a partial save or an unexpected rollback, apply `$context_dir/framework-rules.md`: trace the exception type to its catch sites and to the transaction boundary, check whether a nested transactional call marks the transaction rollback-only, and state the end state of every write involved, or say which step is unverified.
+7. Check `$context_dir/variant-map.md`, and `$context_dir/program-config.md` when it exists: could a configuration key, or one program's value for it, explain the behaviour in this deployment?
+8. List root-cause hypotheses ranked by evidence, each with the BR id, file and line that supports it.
+9. For a proposed fix, check architectural fit:
+   - the fix belongs in the domain that owns the rule (see `summary.md` responsibility);
+   - it does not break a rule of a dependent domain (see `$context_dir/dependency-map.md` or `$context_dir/impact-map.json`, `depended_on_by`);
+   - it does not change a shared table or shared entity without listing its other users.
+10. Flag when the defect matches a rule marked SUSPECTED DEFECT, a rule marked NEEDS EDIT (use its corrected text), or a claim listed under "Known BRE corrections" or in `$context_dir/errata.md`.
+
+## Output
+
+Symptom summary; domain and BR id; code location; ranked hypotheses with evidence; the end state of each write involved; the fix's architectural fit (owning domain, dependent domains affected, variants and programs to retest); the regression test that would have caught it.
+
+$verification_rules

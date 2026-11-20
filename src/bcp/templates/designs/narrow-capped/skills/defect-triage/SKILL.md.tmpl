@@ -1,0 +1,23 @@
+# Defect triage: $project_name
+
+Use this skill when a defect, error message, exception or wrong behaviour in $project_name needs to be traced to its domain, rule and code, or when a proposed fix needs an architectural check.
+
+## Procedure
+
+1. Extract the symptoms: message codes, exception types, entity, operation, configuration in use, and the steps to reproduce.
+2. Search for message codes and exception types in `$bre_dir/detailed-domain-bre/domain-*/validations.md` and in `$context_dir/domains/*/reviewed-rules.md`.
+3. Map the symptom to a domain, a BR id and a class.method. Take the code location from the rule's `> Review:` evidence and `> Anchors` line. Use `$context_dir/file-index.json` when you start from a file.
+4. For a VERIFIED rule, its evidence confirms the mapping: cite it without opening the code. Open code only when the rule is not VERIFIED, the context does not cover the symptom's code path, or the user asks you to verify; at most $max_code_reads code reads (file reads or code searches) in total.
+5. Check `$context_dir/variant-map.md`: could a configuration key explain the behaviour in this deployment?
+6. List root-cause hypotheses ranked by evidence, each with the BR id, file and line that supports it.
+7. For a proposed fix, check architectural fit:
+   - the fix belongs in the domain that owns the rule (see `summary.md` responsibility);
+   - it does not break a rule of a dependent domain (see `$context_dir/impact-map.json`, `depended_on_by`);
+   - it does not change a shared table or shared entity without listing its other users.
+8. Flag when the defect matches a rule marked SUSPECTED DEFECT, a rule marked NEEDS EDIT (use its corrected text), or a claim listed under "Known BRE corrections" or in `$context_dir/errata.md`.
+
+## Output
+
+Symptom summary; domain and BR id; code location; ranked hypotheses with evidence; the fix's architectural fit (owning domain, dependent domains affected, variants to retest).
+
+$verification_rules

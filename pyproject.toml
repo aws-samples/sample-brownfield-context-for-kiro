@@ -1,0 +1,18 @@
+[project]
+name = "bcp"
+version = "1.4.3"
+description = "Brownfield context power: review a business-rules extraction and generate Kiro context from it."
+requires-python = ">=3.12"
+license = { text = "MIT-0" }
+
+[project.optional-dependencies]
+kb = ["boto3==1.42.56", "botocore==1.42.97"]
+
+[project.scripts]
+bcp = "bcp.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = ["integration: needs BCP_INTEGRATION_* env vars"]
+addopts = "-m 'not integration'"

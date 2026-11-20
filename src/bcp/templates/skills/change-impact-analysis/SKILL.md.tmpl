@@ -1,0 +1,35 @@
+# Change impact analysis: $project_name
+
+Use this skill when asked which domains, components, tables, configuration variants or programs a change, requirement or fix affects, what could regress elsewhere, or which tests are missing.
+
+## Procedure
+
+1. Restate the change in one sentence. List any files, classes, tables, message codes or configuration keys it names.
+2. Find the seed domains:
+   - files or classes named → look them up in `$context_dir/file-index.json` (file → domains);
+   - otherwise match the change text to domain summaries in `.kiro/steering/bre-context-index.md` and open `$context_dir/domains/<slug>/summary.md`.
+3. Expand one hop. Prefer `$context_dir/dependency-map.md` when it exists: use `confirmed-by-code` and `code-only` edges as dependencies; treat `bre-only (verify)` edges as hypotheses and check them in the code. Otherwise use `depends_on` and `depended_on_by` in `$context_dir/impact-map.json`. Keep a candidate only when you can name why it is affected (a shared table, a shared entity, a cross-domain feature, a call in the code).
+4. List shared tables (`shared_tables`) and shared entities the change touches, with every domain that uses them.
+5. Open `$context_dir/variant-map.json`. List every configuration key whose `read_by` domains or `hits` files overlap the affected files or domains. These are the variants to retest.
+6. Per-program configuration. When `$context_dir/program-config.md` exists, for each key from step 5 (and each key the change names):
+   - read its catalogue entry: constant, read sites, code default, values seen near read sites;
+   - read "Programs a change affects": group the programs by effective value; a program marked "absent: code default applies" runs the code default;
+   - say which programs the change affects and how, per group. Say plainly when a program is SYNTHETIC.
+   Without the file, say that per-program values were not available and list the keys to check in each program's configuration table.
+7. For each affected domain, open `$context_dir/domains/<slug>/reviewed-rules.md` and list the rules at risk by BR id.
+8. Test gaps. For each changed class or method, search the test sources (`src/test`, or the test folders beside the main source folders) for test classes that name it. List the changed methods no test names, and the programs or variants no test covers.
+9. Check the code: open the files you named and confirm each "why affected" line. Drop rows you cannot confirm, or mark them low confidence.
+
+## Output
+
+A table with columns: domain, why affected (evidence: file path or BR id), rules at risk (BR ids), variants to retest (keys), programs affected (by effective value), confidence (high / medium / low).
+
+Then "Test gaps": changed methods with no test that names them, and the regression tests to require.
+
+Then a section "What this analysis could not see", always present. Include at least: configuration values of programs without a snapshot, other repositories and services outside this extraction, data-dependent behaviour, and any rule marked unreviewed or needs SME that the answer depends on.
+
+## Rules
+
+- Do not list a domain without a reason you can point to.
+- Prefer VERIFIED rules; flag SUSPECTED DEFECT rules explicitly.
+$verification_rules

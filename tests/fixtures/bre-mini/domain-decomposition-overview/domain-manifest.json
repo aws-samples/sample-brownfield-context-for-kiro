@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.0",
+  "project": {
+    "name": "mini-project",
+    "primary_languages": ["Java", "Python"],
+    "total_source_files": 12,
+    "total_loc": 320,
+    "stats": {
+      "version": "1.0.0",
+      "build_tool": "Maven",
+      "modules": ["core", "app"],
+      "rule_count": 13,
+      "domain_count": 3
+    }
+  },
+  "domains": [
+    {
+      "slug": "alpha",
+      "name": "Alpha Management",
+      "description": "Manages alpha records and their lifecycle. Second sentence is not used.",
+      "complexity": "medium",
+      "responsibility": "Owns the alpha aggregate. Saves and purges alphas.",
+      "bounded_context_summary": "Alpha context.",
+      "source_files": [
+        {"path": "src/main/java/x/AlphaService.java", "loc": 30, "role": "service", "primary_entity": "Alpha"},
+        {"path": "src/main/java/x/Alpha.java", "loc": 12, "role": "entity", "primary_entity": "Alpha"},
+        {"path": "src/main/java/x/Constants.java", "loc": 6, "role": "constants", "primary_entity": null}
+      ],
+      "entities": [
+        {"name": "Alpha", "table_name": "alpha", "is_shared": true, "source_file": "src/main/java/x/Alpha.java"}
+      ],
+      "owned_tables": ["alpha", "alpha_attribute"],
+      "shared_tables_referenced": ["beta"],
+      "depends_on_domains": ["beta"],
+      "depended_on_by_domains": [],
+      "shared_entities_used": ["Alpha"],
+      "cross_domain_features": ["alpha-beta link"],
+      "rule_count": 8,
+      "stats": {"source_file_count": 3, "source_loc": 48, "extraction_wave": 2}
+    },
+    {
+      "slug": "beta",
+      "name": "Beta Processing",
+      "description": "Processes beta orders.",
+      "complexity": "low",
+      "responsibility": "Processes beta orders end to end.",
+      "source_files": [
+        {"path": "src/main/java/x/BetaService.java", "loc": 14, "role": "service", "primary_entity": "Beta"},
+        {"path": "app/services/orders.py", "loc": 8, "role": "service", "primary_entity": null}
+      ],
+      "entities": [
+        {"name": "Beta", "table_name": "beta", "is_shared": false, "source_file": "src/main/java/x/BetaService.java"}
+      ],
+      "owned_tables": ["beta"],
+      "shared_tables_referenced": ["alpha"],
+      "depends_on_domains": ["gamma"],
+      "depended_on_by_domains": ["alpha"],
+      "shared_entities_used": ["Alpha"],
+      "cross_domain_features": [],
+      "rule_count": 5,
+      "stats": {"source_file_count": 2, "source_loc": 22, "extraction_wave": 1}
+    },
+    {
+      "slug": "gamma",
+      "name": "Gamma Utilities",
+      "description": "Shared helper utilities",
+      "responsibility": "Helpers.",
+      "source_files": [
+        "lib/util.py",
+        {"path": "src/main/java/y/GammaHelper.java", "loc": 9, "role": "helper"}
+      ],
+      "entities": [],
+      "owned_tables": [],
+      "shared_tables_referenced": [],
+      "depends_on_domains": [],
+      "depended_on_by_domains": ["beta"],
+      "rule_count": 0,
+      "stats": {"extraction_wave": 0}
+    }
+  ],
+  "shared_entities": [
+    {
+      "name": "Alpha",
+      "table_name": "alpha",
+      "source_file": "src/main/java/x/Alpha.java",
+      "used_by_domains": ["alpha", "beta"],
+      "owning_domain": "alpha"
+    }
+  ],
+  "shared_kernel_components": [
+    {
+      "component_name": "Constants",
+      "component_type": "constants",
+      "source_file": "src/main/java/x/Constants.java",
+      "used_by_domains": ["alpha", "beta"]
+    }
+  ],
+  "cross_cutting_concerns": [
+    {
+      "concern": "auditing",
+      "summary": "Every save is audited. Details follow.",
+      "documented_in": "cross-cutting-documentation/audit.md"
+    }
+  ],
+  "execution_order": ["gamma", "beta", "alpha"],
+  "common_artifacts": {
+    "global_schema_path": "database-documentation/00-global-schema.sql"
+  }
+}

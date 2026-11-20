@@ -1,0 +1,41 @@
+# Framework rules: $project_name
+
+Static reading of the code misses some framework semantics: how transactions begin and end, what rolls back on an error, where authorization is enforced, and what runs on other threads. Kiro applies the rules in this file before it states an end state, a rollback, a commit or an authorization fact.
+
+Ask the team to fill this in for $stack. Keep each rule short and say how to check it in code. A Java and Spring example ships with the tool (`framework_rules: "java-spring"`); use it as a model.
+
+## 1. Transaction boundaries
+
+- Where does a unit of work start and end?
+- How to check in code:
+
+## 2. Errors and rollback
+
+- Which errors roll back the unit of work, and which do not?
+- Can a nested call mark the outer unit of work for rollback?
+- How to check in code:
+
+## 3. Authorization
+
+- Where are permission checks declared (annotations, configuration, guard calls in the body)?
+- Do declarations on interfaces or base types apply to implementations?
+- How to check in code:
+
+## 4. Indirect calls and interception
+
+- Which calls skip interceptors, proxies or middleware?
+- How to check in code:
+
+## 5. Scheduled, async and background work
+
+- Which user, session and transaction does background work run with?
+- How to check in code:
+
+## 6. Persistence side effects
+
+- Are changes to loaded objects saved without an explicit save call?
+- How to check in code:
+
+## Team additions
+
+Add rules for the other frameworks this team uses. Use the same shape: the rule, then "How to check in code".

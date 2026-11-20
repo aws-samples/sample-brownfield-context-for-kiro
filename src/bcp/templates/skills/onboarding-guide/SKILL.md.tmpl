@@ -1,0 +1,36 @@
+# Onboarding guide: $project_name
+
+Use this skill when someone new to $project_name asks how the system fits together, where a business flow lives, or where to start reading.
+
+## Reading order and trust
+
+Read in this order, and trust each source as its tier says (`$context_dir/trust-tiers.md`):
+
+1. `$context_dir/errata.md`: corrected claims; never repeat a passage it marks superseded.
+2. `.kiro/steering/bre-context-index.md` and `$context_dir/domains/<slug>/summary.md`: the domain map (Tier 2).
+3. `$context_dir/domains/<slug>/reviewed-rules.md`: rules with their review status (Tier 2; VERIFIED and NEEDS EDIT rules were checked by a reviewer).
+4. `$context_dir/dependency-map.md` (Tier 1 code edges) and `$context_dir/impact-map.md` (Tier 2).
+5. Extraction diagrams and `workflows.md` last. They are Tier 3, hypothesis only: use them to find code to read, never as the answer.
+
+## Procedure
+
+1. Read `.kiro/steering/bre-context-index.md` and `$context_dir/impact-map.md`. Note the domain list and the dependency graph. When `$context_dir/dependency-map.md` exists, prefer its `confirmed-by-code` edges.
+2. Build a reading path through the domains in extraction order (see `.kiro/steering/product.md`): foundation domains first, then the domains that depend on them.
+3. If the person names a business flow (for example "how does X get saved"), find the domains it crosses:
+   - match the flow to domain names and summaries in the index;
+   - open `$context_dir/domains/<slug>/summary.md` for each candidate domain;
+   - follow `depends_on` / `depended_on_by` in `$context_dir/impact-map.json` one hop.
+4. For each domain on the path, list:
+   - its responsibility (one sentence, from `summary.md`);
+   - the key rules, by BR id, from `$context_dir/domains/<slug>/reviewed-rules.md` (prefer VERIFIED rules);
+   - the entry classes or files (from the rule evidence lines and the source-file list in `summary.md`).
+5. Point to the diagrams under `$bre_dir/detailed-domain-bre/domain-<slug>/diagrams/` for the flow, as plain paths to open. Diagrams and workflows are Tier 3 (hypothesis only): use them to find code, and check the code before you state an order, an end state or an error path.
+6. When behaviour depends on configuration, name the keys from `$context_dir/variant-map.md`, and the per-program values from `$context_dir/program-config.md` when it exists.
+7. End with three self-check questions, each answered from a VERIFIED rule (cite the BR id and evidence path).
+
+## Rules
+
+- Cite BR ids and file paths for every claim.
+- Say "unreviewed" or "needs SME" when the rule you rely on is not VERIFIED.
+- The extraction describes today's code, including today's defects; do not present a rule as intended behaviour unless it is VERIFIED.
+$verification_rules

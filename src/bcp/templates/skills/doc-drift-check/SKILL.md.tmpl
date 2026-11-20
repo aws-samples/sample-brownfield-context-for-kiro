@@ -1,0 +1,25 @@
+# Documentation drift check: $project_name
+
+Use this skill when asked whether documentation still matches the code, what changed since the context was generated, or what to re-review before a release.
+
+## Procedure
+
+1. Pick the inputs:
+   - documented behaviour: repository docs, wiki pages the team exported to a folder (for example through its wiki MCP server), or extraction documents under `$bre_dir`;
+   - the code in this workspace.
+2. Read the mechanical reports when they exist (the team runs them with the Brownfield Context Power's `bre-doc-drift-check` skill):
+   - `docdrift-report.md`: identifiers the docs name that the code lacks (HIGH), documented values that differ from code defaults (MEDIUM), docs older than the code they name (LOW), and "claims for Kiro to check";
+   - `release-drift.md`: files changed since the context was generated, their domains, and the claims that cite them.
+   If neither report exists, work from the documents directly: list each identifier and each behaviour sentence, and search the code for it.
+3. For every HIGH or MEDIUM finding, open the code and say what it does today, with `[code: path#Lx-Ly]`.
+4. For every "claim for Kiro to check", open the code it names and mark the claim confirmed, wrong (say what the code does) or unverified.
+5. For each changed file in the release list, read `$context_dir/domains/<slug>/reviewed-rules.md` for the claims it names and say whether the change could make the rule's text wrong. Recommend re-review for those claims.
+6. Check `$context_dir/errata.md`: a documented sentence that repeats a corrected claim is drift too.
+
+## Output
+
+A table with columns: document and line, what the doc says, what the code does (with evidence), status (confirmed, drifted, unverified), action (fix the doc, re-review the rule, ask the owner).
+
+Then "Release re-review list": claims to re-review by domain, from the release drift list.
+
+$verification_rules

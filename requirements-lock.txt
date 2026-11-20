@@ -1,0 +1,26 @@
+# Every package, including transitive ones, exactly as tested (pip freeze --all of the fresh test venv,
+# Python 3.13.2 on Windows). Install with: python -m pip install -r requirements-lock.txt
+# Runtime needs only the boto3 group (requirements.txt); the rest is for the unit tests.
+attrs==26.1.0
+boto3==1.42.56
+botocore==1.42.97
+colorama==0.4.6
+coverage==7.17.2
+iniconfig==2.3.1
+jmespath==1.1.0
+jsonschema==4.23.0
+jsonschema-specifications==2025.9.1
+packaging==26.3
+pip==26.3
+pluggy==1.7.0
+Pygments==2.21.0
+pytest==9.2.0
+pytest-cov==7.1.0
+python-dateutil==2.9.0.post0
+PyYAML==6.0.2
+RapidFuzz==3.14.6
+referencing==0.37.0
+rpds-py==2026.9.1
+s3transfer==0.16.1
+six==1.17.0
+urllib3==2.8.0

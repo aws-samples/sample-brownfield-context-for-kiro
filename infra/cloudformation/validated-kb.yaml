@@ -1,0 +1,323 @@
+# Validated knowledge base: S3 facts bucket, S3 Vectors bucket + index, Bedrock KB service role,
+# Amazon Bedrock knowledge base (S3_VECTORS storage) and an S3 data source limited to verified/.
+#
+# Same resources and settings as src/bcp/kb_provision.py (the boto3 route): versioned SSE-S3 facts
+# bucket with public access blocked, ACLs disabled, a TLS-only bucket policy and a lifecycle rule for
+# unfinished multipart uploads. Only this template has the optional AccessLogBucketName (S3 server
+# access logging). Pick one route per environment; do not mix them for the same NamePrefix, because
+# both use the same resource names.
+#
+# Resource type support (checked against the AWS CloudFormation Template Reference):
+#   AWS::S3Vectors::VectorBucket  https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-s3vectors-vectorbucket.html
+#   AWS::S3Vectors::Index         https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-s3vectors-index.html
+#     MetadataConfiguration.NonFilterableMetadataKeys
+#                                 https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-s3vectors-index-metadataconfiguration.html
+#   AWS::Bedrock::KnowledgeBase   https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrock-knowledgebase.html
+#     StorageConfiguration.Type S3_VECTORS
+#                                 https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-bedrock-knowledgebase-storageconfiguration.html
+#     S3VectorsConfiguration      https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-bedrock-knowledgebase-s3vectorsconfiguration.html
+#   AWS::Bedrock::DataSource      https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-bedrock-datasource.html
+#   AWS::LanguageExtensions (intrinsic functions in DeletionPolicy, used for RetainData)
+#                                 https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-aws-languageextensions.html
+#                                 https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/function-refs-in-policy-attributes.html
+#
+# Every resource and property used here is supported in CloudFormation. What CloudFormation does NOT
+# do, and kb_provision.py does (use the boto3 route if you need it):
+#   * Pre-flight checks. CloudFormation does not check Bedrock model access or region support before
+#     it starts; a missing model shows up as a failed AWS::Bedrock::KnowledgeBase resource and a
+#     rollback. Run `python -m bcp.kb_provision status --config ...` or check model access first.
+#   * IAM propagation retry. The knowledge base is created right after the role. If the first deploy
+#     fails on the knowledge base with a role or permission validation error, deploy again.
+#   * Teardown rules. With RetainData=false CloudFormation tries to delete the facts bucket and fails
+#     (DELETE_FAILED) when it still holds objects, which protects data but leaves the stack to clean
+#     up by hand. kb_provision.teardown refuses up front and offers an explicit force option.
+#   * Free-form tags. Parameters cannot be maps, so this template exposes Owner and Project. Add more
+#     with stack-level tags (`--tags`), which CloudFormation propagates to the supported resources.
+#
+# Checked with cfn-lint 1.60.0 and checkov 3.4.3 (0 findings each), deployed once in a test account in
+# us-east-1 with RetainData=false and no access-log bucket, smoke-tested, and deleted.
+#
+# Deploy (needs a change set because of the transform; aws cloudformation deploy creates one):
+#   aws cloudformation deploy --template-file infra/cloudformation/validated-kb.yaml \
+#     --stack-name <prefix>-validated-kb --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND \
+#     --parameter-overrides NamePrefix=<prefix> Owner=<team> RetainData=true
+# The AWS CLI must be recent enough to know the S3 Vectors and Bedrock S3_VECTORS types; older CLI
+# builds still deploy the template (CloudFormation resolves types server-side) but cannot call the
+# services directly.
+
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::LanguageExtensions
+Description: >-
+  Validated knowledge layer - S3 facts bucket, S3 Vectors index, Amazon Bedrock knowledge base
+  (S3_VECTORS) and an S3 data source limited to reviewed facts.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: {default: Naming}
+        Parameters: [NamePrefix, IndexName, InclusionPrefix]
+      - Label: {default: Embeddings}
+        Parameters: [EmbeddingModelId]
+      - Label: {default: Ownership and data retention}
+        Parameters: [Owner, Project, RetainData]
+      - Label: {default: Logging}
+        Parameters: [AccessLogBucketName]
+
+Parameters:
+  NamePrefix:
+    Type: String
+    Description: >-
+      Prefix for every resource name. 3-20 chars, lowercase letters and digits, single hyphens,
+      starting with a letter. Same rule as name_prefix in kb-config.json.
+    AllowedPattern: "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+    MinLength: 3
+    MaxLength: 20
+  EmbeddingModelId:
+    Type: String
+    Default: amazon.titan-embed-text-v2:0
+    Description: >-
+      Bedrock embedding model id. The vector index is fixed at 1024 dimensions, which matches the
+      Titan Text Embeddings V2 default.
+    AllowedPattern: "^[a-z0-9][a-z0-9.:-]*$"
+  IndexName:
+    Type: String
+    Default: verified-facts
+    AllowedPattern: "^[a-z0-9][a-z0-9.-]*[a-z0-9]$"
+    MinLength: 3
+    MaxLength: 63
+  InclusionPrefix:
+    Type: String
+    Default: verified/
+    Description: Only objects under this key prefix are ingested. Stale facts are moved out of it.
+    AllowedPattern: "^[A-Za-z0-9!_.*'()-][A-Za-z0-9!_.*'()/-]*/$"
+  Owner:
+    Type: String
+    Description: Value of the owner tag (team or cost owner, not a personal name if you can avoid it).
+    AllowedPattern: "^[\\w\\s.:/=+@-]{1,256}$"
+  Project:
+    Type: String
+    Default: validated-kb
+    AllowedPattern: "^[\\w\\s.:/=+@-]{1,256}$"
+  RetainData:
+    Type: String
+    Default: "true"
+    AllowedValues: ["true", "false"]
+    Description: >-
+      true keeps the facts bucket when the stack is deleted. false deletes it, and the delete fails
+      if the bucket still holds objects.
+  AccessLogBucketName:
+    Type: String
+    Default: ""
+    Description: >-
+      Optional. Name of an existing S3 bucket in this account and Region that already accepts S3 server
+      access logs (your central log bucket). Empty turns server access logging off; use CloudTrail
+      data events instead or as well.
+    AllowedPattern: "^$|^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$"
+
+Conditions:
+  KeepData: !Equals [!Ref RetainData, "true"]
+  HasAccessLogBucket: !Not [!Equals [!Ref AccessLogBucketName, ""]]
+
+Resources:
+  FactsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: !If [KeepData, Retain, Delete]
+    UpdateReplacePolicy: !If [KeepData, Retain, Delete]
+    Properties:
+      BucketName: !Sub "${NamePrefix}-kb-${AWS::AccountId}-${AWS::Region}"
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      # Only unfinished multipart uploads are cleaned up. Old versions are kept: they are the restore
+      # path for a fact. Add an expiry rule if your retention policy needs one.
+      LifecycleConfiguration:
+        Rules:
+          - Id: abort-incomplete-multipart-uploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+      LoggingConfiguration: !If
+        - HasAccessLogBucket
+        - DestinationBucketName: !Ref AccessLogBucketName
+          LogFilePrefix: !Sub "s3-access/${NamePrefix}-kb/"
+        - !Ref AWS::NoValue
+      Tags:
+        - {Key: owner, Value: !Ref Owner}
+        - {Key: project, Value: !Ref Project}
+
+  # TLS only: deny every request that is not HTTPS or uses TLS older than 1.2. Deny-only, so the bucket
+  # never becomes public. Same policy as kb_provision.bucket_policy().
+  FactsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DeletionPolicy: !If [KeepData, Retain, Delete]
+    UpdateReplacePolicy: !If [KeepData, Retain, Delete]
+    Properties:
+      Bucket: !Ref FactsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt FactsBucket.Arn
+              - !Sub "${FactsBucket.Arn}/*"
+            Condition:
+              Bool: {aws:SecureTransport: false}
+          - Sid: DenyOutdatedTls
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt FactsBucket.Arn
+              - !Sub "${FactsBucket.Arn}/*"
+            Condition:
+              NumericLessThan: {s3:TlsVersion: "1.2"}
+
+  VectorBucket:
+    Type: AWS::S3Vectors::VectorBucket
+    Properties:
+      VectorBucketName: !Sub "${NamePrefix}-vectors-${AWS::AccountId}-${AWS::Region}"
+      # S3 Vectors encrypts with SSE-S3 by default; stated here so the setting is explicit and reviewable.
+      EncryptionConfiguration:
+        SseType: AES256
+      Tags:
+        - {Key: owner, Value: !Ref Owner}
+        - {Key: project, Value: !Ref Project}
+
+  VectorIndex:
+    Type: AWS::S3Vectors::Index
+    Properties:
+      VectorBucketArn: !GetAtt VectorBucket.VectorBucketArn
+      IndexName: !Ref IndexName
+      DataType: float32
+      Dimension: 1024
+      DistanceMetric: cosine
+      # Required: Bedrock stores chunk text and metadata on every vector. Unless these two keys are
+      # non-filterable, ingestion fails on the 2 KB filterable-metadata limit.
+      MetadataConfiguration:
+        NonFilterableMetadataKeys:
+          - AMAZON_BEDROCK_TEXT
+          - AMAZON_BEDROCK_METADATA
+      Tags:
+        - {Key: owner, Value: !Ref Owner}
+        - {Key: project, Value: !Ref Project}
+
+  KbServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${NamePrefix}-kb-role-${AWS::Region}"
+      Description: Amazon Bedrock knowledge base service role (validated facts)
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: bedrock.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                aws:SourceArn: !Sub "arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:knowledge-base/*"
+      Policies:
+        - PolicyName: kb-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: InvokeEmbeddingModel
+                Effect: Allow
+                Action: bedrock:InvokeModel
+                Resource: !Sub "arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/${EmbeddingModelId}"
+              - Sid: ListFactsBucket
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt FactsBucket.Arn
+                Condition:
+                  StringEquals: {aws:ResourceAccount: !Ref AWS::AccountId}
+              - Sid: ReadFacts
+                Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "${FactsBucket.Arn}/*"
+                Condition:
+                  StringEquals: {aws:ResourceAccount: !Ref AWS::AccountId}
+              - Sid: VectorIndex
+                Effect: Allow
+                Action:
+                  - s3vectors:PutVectors
+                  - s3vectors:GetVectors
+                  - s3vectors:DeleteVectors
+                  - s3vectors:QueryVectors
+                  - s3vectors:GetIndex
+                  - s3vectors:ListVectors
+                Resource:
+                  - !GetAtt VectorBucket.VectorBucketArn
+                  - !GetAtt VectorIndex.IndexArn
+      Tags:
+        - {Key: owner, Value: !Ref Owner}
+        - {Key: project, Value: !Ref Project}
+
+  KnowledgeBase:
+    Type: AWS::Bedrock::KnowledgeBase
+    Properties:
+      Name: !Sub "${NamePrefix}-validated-kb"
+      Description: "Validated knowledge layer: reviewed facts only"
+      RoleArn: !GetAtt KbServiceRole.Arn
+      KnowledgeBaseConfiguration:
+        Type: VECTOR
+        VectorKnowledgeBaseConfiguration:
+          EmbeddingModelArn: !Sub "arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/${EmbeddingModelId}"
+      StorageConfiguration:
+        Type: S3_VECTORS
+        S3VectorsConfiguration:
+          IndexArn: !GetAtt VectorIndex.IndexArn
+      # mcp-multirag-kb=true is required for the AWS Labs Bedrock KB retrieval MCP server to list the KB.
+      Tags:
+        mcp-multirag-kb: "true"
+        owner: !Ref Owner
+        project: !Ref Project
+
+  DataSource:
+    Type: AWS::Bedrock::DataSource
+    Properties:
+      KnowledgeBaseId: !Ref KnowledgeBase
+      Name: verified-facts
+      Description: Only reviewed facts are synced; stale facts are moved out of this prefix.
+      DataDeletionPolicy: DELETE
+      DataSourceConfiguration:
+        Type: S3
+        S3Configuration:
+          BucketArn: !GetAtt FactsBucket.Arn
+          BucketOwnerAccountId: !Ref AWS::AccountId
+          InclusionPrefixes:
+            - !Ref InclusionPrefix
+      VectorIngestionConfiguration:
+        ChunkingConfiguration:
+          ChunkingStrategy: NONE
+
+Outputs:
+  KnowledgeBaseId:
+    Value: !GetAtt KnowledgeBase.KnowledgeBaseId
+  DataSourceId:
+    Value: !GetAtt DataSource.DataSourceId
+  BucketName:
+    Value: !Ref FactsBucket
+  IndexArn:
+    Value: !GetAtt VectorIndex.IndexArn
+  RoleArn:
+    Value: !GetAtt KbServiceRole.Arn
+  VectorBucketArn:
+    Value: !GetAtt VectorBucket.VectorBucketArn
+  Region:
+    Value: !Ref AWS::Region

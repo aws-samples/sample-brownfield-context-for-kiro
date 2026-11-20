@@ -1,0 +1,23 @@
+{
+  "region": "us-east-1",
+  "name_prefix": "myteam-kb",
+  "kb_name": "myteam-kb-validated-kb",
+  "kb_description": "Validated knowledge layer: reviewed facts only",
+  "embedding_model_id": "amazon.titan-embed-text-v2:0",
+  "index_name": "verified-facts",
+  "data_source_name": "verified-facts",
+  "inclusion_prefix": "verified/",
+  "tags": {
+    "project": "validated-kb",
+    "owner": "platform-team",
+    "cost-center": "replace-me"
+  },
+  "retain_data": true,
+  "bucket_name": null,
+  "vector_bucket_name": null,
+  "role_name": null,
+  "expected_account_id": null,
+  "profile": null,
+  "state_file": "kb_state.json",
+  "iam_wait_seconds": 15
+}

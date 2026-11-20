@@ -1,0 +1,8 @@
+{
+  "program_id": "c",
+  "synthetic": true,
+  "properties": {
+    "alpha.mode": "basic",
+    "beta.limit": "10"
+  }
+}

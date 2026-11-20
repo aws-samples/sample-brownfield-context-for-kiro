@@ -1,0 +1,22 @@
+# Scoped test generation: $project_name
+
+Use this skill when asked to write or plan tests for a change in $project_name, especially when a specific number of tests is requested.
+
+## Procedure
+
+1. Identify the in-scope rules: from a change impact analysis, or from the rules the user lists. Open each in `$context_dir/domains/<slug>/reviewed-rules.md`.
+2. Derive acceptance criteria from each rule's body: one criterion per IF/THEN branch, guard or error case. Give each criterion an id like `BR-4.a`.
+3. Decide the number of tests N:
+   - if the user gave a number, N is exactly that number;
+   - otherwise N is the number of in-scope criteria, capped at 12 unless the user raises the cap.
+4. Write exactly N tests. Each test names its BR id and criterion id in its name or a comment, and follows the project's existing test framework and style (look at neighbouring tests first).
+5. List the excluded candidates (criteria you did not cover) with the reason: over the requested count, out of scope, or rule not reviewed.
+
+## Rules
+
+- Never produce more tests than N.
+- Do not write tests outside the in-scope rules.
+- Never write tests for rules listed under "Known BRE corrections" (incorrect claims) without asking first; the extraction is wrong there.
+- For a rule marked NEEDS EDIT, derive criteria from its corrected text only, never from the original extraction.
+- For SUSPECTED DEFECT rules, ask whether the test should assert today's behaviour or the intended behaviour.
+$verification_rules

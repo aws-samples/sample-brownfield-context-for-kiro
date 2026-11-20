@@ -1,0 +1,24 @@
+# Structure: $project_name
+
+$draft_line
+
+## Modules
+
+$modules
+
+## Where each domain mostly lives
+
+$domain_dirs
+
+## Shared extraction artifacts
+
+$artifacts
+
+## Generated Kiro context
+
+- `.kiro/steering/bre-domain-<slug>.md` (auto) and `bre-domain-<slug>-code.md` (fileMatch): per-domain context.
+- `$context_dir/domains/<slug>/summary.md` and `reviewed-rules.md`: domain facts and review-filtered rules.
+- `$context_dir/impact-map.md`, `impact-map.json`, `file-index.json`: cross-domain dependencies.
+- `$context_dir/variant-map.md`, `variant-map.json`: configuration and feature-flag variants.
+- `$context_dir/glossary.md`, `review-status.md`, `citation-baseline.json`.
+- `$bre_dir/`: the business-rules extraction (BRE) itself.
