@@ -40,15 +40,26 @@ time.
 
 ## Architecture
 
-![Flow from a brownfield Java application through AWS Transform custom extraction, mechanical checks, a Kiro review and an SME sign-off gate, into an Amazon Bedrock knowledge base and a code graph, then retrieved by a Kiro hook before each prompt, with a dashed keep-current loop back to the review gate.](docs/images/architecture.png)
+![Three-phase architecture. Build, once per repository: AWS Transform custom extracts draft business rules from a Git repository at a fixed commit; a Kiro Power runs the bcp tool through a bre-review skill (bcp checks, then a Kiro review of each rule, producing an SME workbook the SME signs off into reviewed rules) and a brownfield-context-setup skill that writes the .kiro/ context and a class-level code graph, with optional config exports becoming a per-program config map. Use, every day in Kiro: a user works in Kiro IDE or CLI with generated agents, skills and steering, and on every prompt a kb-retrieve hook runs a semantic search over an Amazon S3 facts bucket (verified/, graph/ and quarantine/ prefixes) that an Amazon Bedrock knowledge base embeds with Amazon Titan Text Embeddings V2 into an Amazon S3 Vectors index, adding a code-graph slice. Keep current, as a CI template: on merge, bcp kb refresh re-anchors moved facts and sends changed facts to quarantine, an SME re-reviews them, and approved facts return to verified/.](docs/images/architecture.png)
 
-AWS Transform custom extracts draft business rules from the Java code. `bcp` resolves each rule's
-citations on disk, Kiro reviews the rules against the cited code, and an SME signs them off. Reviewed rules
-become Kiro steering and context, and verified facts in an Amazon Bedrock knowledge base (Amazon Titan Text
-Embeddings V2, Amazon Simple Storage Service (Amazon S3) Vectors). `bcp` also builds a class-level code
-graph. Before each prompt, a Kiro hook retrieves the top verified facts and the code-graph neighbourhood.
-When the code changes, `bcp kb refresh` re-anchors facts whose lines only moved and quarantines facts whose
-cited code changed until they are reviewed again.
+The diagram has three phases.
+
+**Build** (once per repository, re-run when the code changes): AWS Transform custom extracts draft business
+rules from the Git repository. The Kiro Power's `bre-review` skill runs the `bcp` mechanical checks and a
+Kiro review of each rule against the cited code and exports a risk-ranked SME workbook; an SME signs off
+the reviewed rules. The `brownfield-context-setup` skill then writes the `.kiro/` context and a class-level
+code graph. Reviewed rules become Kiro steering and context and verified facts; optional config exports
+become a per-program config map.
+
+**Use** (every day in Kiro, any SDLC role): a developer works through the generated agents, skills and
+steering, and on every prompt the `kb-retrieve` hook runs a semantic search of the verified facts and adds a
+code-graph slice. The facts live in an Amazon Simple Storage Service (Amazon S3) bucket (`verified/`,
+`graph/` and `quarantine/` prefixes) that an Amazon Bedrock knowledge base embeds with Amazon Titan Text
+Embeddings V2 into an Amazon S3 Vectors index.
+
+**Keep current** (a CI template): on merge, `bcp kb refresh` re-anchors facts whose lines only moved and
+quarantines facts whose cited code changed; an SME re-reviews the quarantined facts before they return to
+`verified/`.
 
 ---
 
@@ -444,7 +455,7 @@ brownfield-context-for-kiro/
 ├── requirements-lock.txt         # every package, including test tools, exactly as tested
 ├── docs/
 │   ├── reference.md              # background, configuration, IAM, cost notes, how to extend
-│   └── images/architecture.png   # the architecture diagram (SVG source beside it)
+│   └── images/architecture.png   # the architecture diagram
 ├── src/bcp/                      # the bcp tool (standard library; boto3 for the AWS commands)
 ├── tests/                        # unit tests (pytest); no test calls AWS
 ├── power/brownfield-context/     # the Kiro Power source (three skills)
