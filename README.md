@@ -1,8 +1,15 @@
 # Brownfield context for Kiro
 
 Make a legacy brownfield codebase **AI-ready** for [Kiro](https://kiro.dev/): build a reviewed, cited
-context of the system once, keep it current as the code changes, and put the most relevant verified facts
-in front of every prompt.
+context of the system once, keep it current as the code changes, and give Kiro the most relevant verified
+facts with every prompt.
+
+With that context, Kiro works from your application's reviewed business rules, components and dependencies,
+so it does not have to infer them from the files open in the session. Developers and new team members can
+ask how a business flow works end to end, which components and configuration a change affects, where a
+defect most likely starts, or whether a requirement already exists. Each answer cites the rule ID and the
+source file and line, so the team can check it before acting on it. The same context guides Kiro when it
+writes code or tests, and it stays current as the legacy code changes.
 
 This sample provides the `bcp` command-line tool, a Kiro Power with three skills, AWS CloudFormation and
 AWS Identity and Access Management (IAM) templates for an Amazon Bedrock knowledge base, and the scripts and
