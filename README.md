@@ -639,5 +639,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md#security-issue-notifications) for how to r
 
 ## License
 
-This sample is licensed under the MIT-0 License. See [LICENSE](LICENSE). It is sample code: review it, test
-it, and secure it for your environment before you use it on anything that matters.
+This sample is licensed under the MIT-0 License. See [LICENSE](LICENSE).
+
+This is sample code, for non-production usage. You should work with your security and legal teams to meet
+your organizational security, regulatory and compliance requirements before deployment.
