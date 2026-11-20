@@ -7,7 +7,11 @@ facts with every prompt.
 In a large brownfield application, Kiro sees the files in the current session, not the whole system. Questions
 that span the application, such as how a business flow works end to end, which components and
 configuration a change affects, where a defect most likely starts, or whether a requirement already exists,
-depend on rules and dependencies in files Kiro has not opened. Those answers can be incomplete or wrong.
+depend on two kinds of knowledge in files Kiro has not opened: the business rules, and the dependencies,
+meaning which classes call a changed class and which tables, configuration keys and endpoints it touches. A
+handful of files cannot supply the dependencies, because a dependent can sit anywhere in the application,
+several hops away, and reading the whole codebase for every question is not a scalable, reliable or frugal
+way to answer them. Those answers can be incomplete or wrong.
 This sample gives Kiro reviewed context for the entire application, so its answers are traceable and
 verified: each one cites the rule ID, its review status and the source file and line, and the team can check
 it before acting on it.
@@ -17,7 +21,9 @@ engineer works: the standards and habits they bring to every task. The knowledge
 system knowledge in their head. Today Kiro has, at most, the habits from steering files a team writes by
 hand, and none of the memory. This sample gives it both. `bcp generate` writes the Kiro steering, agents
 and skills from the reviewed rules, so the team does not have to write them manually, and `bcp kb sync`
-loads the verified facts into the knowledge base that holds the memory.
+loads the verified facts into the knowledge base that holds the memory. `bcp graph build` adds a class-level
+code graph of the dependencies, so an impact question is answered from the graph, not guessed from the files
+open in the session.
 
 The approach is also frugal. The expensive work, reading the code and extracting the rules, runs once per
 module and is reviewed once. After that, developers and Kiro agents read the same summarized, vectorized
