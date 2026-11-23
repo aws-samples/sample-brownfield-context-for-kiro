@@ -5,14 +5,14 @@ business and brings in the revenue, by making it **AI-ready** for [Kiro](https:/
 reviewed, traceable context of the system once, keep it current as the code changes, and give Kiro the most
 relevant verified facts with every prompt.
 
-In a large brownfield application, Kiro sees the files in the current session, not the whole system. Questions
-that span the application, such as how a business flow works end to end, which components and
+In a large brownfield application, Kiro can read the code, but it does not know what the system does.
+Questions that span the application, such as how a business flow works end to end, which components and
 configuration a change affects, where a defect most likely starts, or whether a requirement already exists,
-depend on two kinds of knowledge in files Kiro has not opened: the business rules, and the dependencies,
-meaning which classes call a changed class and which tables, configuration keys and endpoints it touches. A
-handful of files cannot supply the dependencies, because a dependent can sit anywhere in the application,
-several hops away, and reading the whole codebase for every question is not a scalable, reliable or frugal
-way to answer them. Those answers can be incomplete or wrong.
+depend on institutional knowledge that no single file holds: the business rules the code enforces, the
+configuration and feature flags that change its behavior, the systems it integrates with, and the
+dependencies between classes, tables and endpoints. Kiro starts every session without that knowledge, and
+reading the whole codebase for every question is not a scalable, reliable or frugal way to rebuild it.
+Those answers can be incomplete or wrong.
 This sample gives Kiro reviewed context for the entire application, so its answers are traceable and
 verified: each one cites the rule ID, its review status and the source file and line, and the team can check
 it before acting on it.
