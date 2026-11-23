@@ -2,7 +2,7 @@
 
 Enable faster AI-native product delivery on a large brownfield application, the software that runs the
 business and brings in the revenue, by making it **AI-ready** for [Kiro](https://kiro.dev/): build a
-reviewed, cited context of the system once, keep it current as the code changes, and give Kiro the most
+reviewed, traceable context of the system once, keep it current as the code changes, and give Kiro the most
 relevant verified facts with every prompt.
 
 In a large brownfield application, Kiro sees the files in the current session, not the whole system. Questions
